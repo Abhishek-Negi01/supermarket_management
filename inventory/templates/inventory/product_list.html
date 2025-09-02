@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product</title>
+</head>
+<body>
+    <h1>Product List</h1>
+    <ul>
+        {%for product in products %}
+        <li>{{ product.name }} - ${{ product.price }} - Stock: {{ product.stock_quantity }}</li>
+            <li>
+                <strong>{{ product.anme}}</strong><br>
+                Price : ₹{{product.price}}<br>
+                Stock Quantity : {{product.stock_quantity}}<br>
+                Description : {{product.description}}<br>
+                {% if product.expiry_date %}
+                Expiry Date : {{product.expiry_date}}
+                {% endif %}
+            </li>
+        {% empty %}
+        <li>No products available.</li>
+        {% endfor %}    
+    </ul>
+</body>
+</html>
