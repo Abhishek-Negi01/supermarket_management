@@ -1,27 +1,326 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product</title>
-</head>
-<body>
-    <h1>Product List</h1>
-    <ul>
-        {%for product in products %}
-        <li>{{ product.name }} - ${{ product.price }} - Stock: {{ product.stock_quantity }}</li>
-            <li>
-                <strong>{{ product.anme}}</strong><br>
-                Price : ₹{{product.price}}<br>
-                Stock Quantity : {{product.stock_quantity}}<br>
-                Description : {{product.description}}<br>
-                {% if product.expiry_date %}
-                Expiry Date : {{product.expiry_date}}
+{% extends 'inventory/base.html' %} {% block title %}Products - Inventory
+Management{% endblock %} {% block content %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+  <div>
+    <h1
+      class="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent mb-3"
+    >
+      Product Inventory
+    </h1>
+    <p class="text-gray-600 dark:text-gray-400 text-lg">
+      Manage your product catalog and stock levels
+    </p>
+  </div>
+  {% if user.is_staff %}
+  <div class="mt-6 md:mt-0">
+    <a
+      href="{% url 'add_product' %}"
+      class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl hover:from-emerald-500 hover:to-emerald-400 transition-all duration-300 shadow-lg transform hover:scale-105"
+    >
+      <i class="fas fa-plus mr-2"></i>
+      Add Product
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Search and Filters -->
+<div
+  class="bg-white dark:bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-dark-700 p-6 mb-6"
+>
+  <div class="flex flex-col md:flex-row gap-4">
+    <!-- Search Bar -->
+    <div class="flex-1">
+      <div class="relative">
+        <div
+          class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+        >
+          <i class="fas fa-search text-gray-400"></i>
+        </div>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search products..."
+          class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        />
+      </div>
+    </div>
+
+    <!-- Stock Filter -->
+    <div class="md:w-48">
+      <select
+        id="stockFilter"
+        class="block w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+      >
+        <option value="all">All Stock Levels</option>
+        <option value="low">Low Stock (< 10)</option>
+        <option value="medium">Medium Stock (10-50)</option>
+        <option value="high">High Stock (> 50)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Products Table -->
+<div
+  class="bg-white dark:bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-dark-700 overflow-hidden"
+>
+  <div class="px-6 py-5 border-b border-gray-200 dark:border-dark-700">
+    <div class="flex items-center justify-between">
+      <h2
+        class="text-2xl font-semibold text-gray-800 dark:text-white flex items-center"
+      >
+        <i class="fas fa-boxes text-emerald-600 dark:text-emerald-400 mr-3"></i>
+        Products List
+      </h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        <span id="productCount">{{ products|length }}</span> products
+      </div>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table
+      class="min-w-full divide-y divide-gray-200 dark:divide-dark-700"
+      id="productsTable"
+    >
+      <thead class="bg-gray-50 dark:bg-dark-700/50">
+        <tr>
+          <th
+            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600"
+            onclick="sortTable(0)"
+          >
+            ID <i class="fas fa-sort ml-1"></i>
+          </th>
+          <th
+            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600"
+            onclick="sortTable(1)"
+          >
+            Product <i class="fas fa-sort ml-1"></i>
+          </th>
+          <th
+            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600"
+            onclick="sortTable(2)"
+          >
+            Stock Level <i class="fas fa-sort ml-1"></i>
+          </th>
+          <th
+            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-600"
+            onclick="sortTable(3)"
+          >
+            Price <i class="fas fa-sort ml-1"></i>
+          </th>
+          <th
+            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+          >
+            Status
+          </th>
+          <th
+            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+          >
+            Expiry Date
+          </th>
+        </tr>
+      </thead>
+      <tbody
+        class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-dark-700"
+      >
+        {% for product in products %}
+        <tr
+          class="hover:bg-gray-50 dark:hover:bg-dark-700/30 transition-colors product-row"
+          data-stock="{{ product.quantity_in_stock }}"
+          data-name="{{ product.name|lower }}"
+        >
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
+          >
+            #{{ product.id }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div
+                class="bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-lg mr-3"
+              >
+                <i
+                  class="fas fa-box text-emerald-600 dark:text-emerald-400"
+                ></i>
+              </div>
+              <div>
+                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                  {{ product.name }}
+                </div>
+                {% if product.description %}
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ product.description|truncatechars:40 }}
+                </div>
                 {% endif %}
-            </li>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div
+                class="text-sm font-medium {% if product.quantity_in_stock < 10 %}text-red-600 dark:text-red-400{% elif product.quantity_in_stock < 50 %}text-yellow-600 dark:text-yellow-400{% else %}text-green-600 dark:text-green-400{% endif %}"
+              >
+                {{ product.quantity_in_stock }} units
+              </div>
+              {% if product.quantity_in_stock < 10 %}
+              <div class="ml-2 w-2 h-2 bg-red-500 rounded-full"></div>
+              {% endif %}
+            </div>
+          </td>
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
+          >
+            ${{ product.price }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {% if product.quantity_in_stock < 10 %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400"
+            >
+              <i class="fas fa-exclamation-circle mr-1"></i>
+              Low Stock
+            </span>
+            {% elif product.quantity_in_stock < 50 %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-400"
+            >
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              Medium
+            </span>
+            {% else %}
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400"
+            >
+              <i class="fas fa-check-circle mr-1"></i>
+              In Stock
+            </span>
+            {% endif %}
+          </td>
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+          >
+            {% if product.expiry_date %} {{ product.expiry_date|date:"M d, Y" }}
+            {% else %}
+            <span class="text-gray-400 dark:text-gray-500">No expiry</span>
+            {% endif %}
+          </td>
+        </tr>
         {% empty %}
-        <li>No products available.</li>
-        {% endfor %}    
-    </ul>
-</body>
-</html>
+        <tr id="noProductsRow">
+          <td colspan="6" class="px-6 py-12 text-center">
+            <div class="text-gray-500 dark:text-gray-400">
+              <i class="fas fa-box-open text-4xl mb-4"></i>
+              <p class="text-lg font-medium text-gray-700 dark:text-white">
+                No products found
+              </p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Start by adding your first product to the inventory
+              </p>
+              {% if user.is_staff %}
+              <a
+                href="{% url 'add_product' %}"
+                class="inline-flex items-center mt-4 px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg hover:from-emerald-500 hover:to-emerald-400 transition-colors"
+              >
+                <i class="fas fa-plus mr-2"></i>
+                Add First Product
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- JavaScript for Search and Filter -->
+<script>
+  // Search functionality
+  document.getElementById("searchInput").addEventListener("keyup", function () {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll(".product-row");
+    let visibleCount = 0;
+
+    rows.forEach((row) => {
+      const productName = row.dataset.name;
+      if (productName.includes(searchTerm)) {
+        row.style.display = "";
+        visibleCount++;
+      } else {
+        row.style.display = "none";
+      }
+    });
+
+    updateProductCount(visibleCount);
+  });
+
+  // Stock filter functionality
+  document
+    .getElementById("stockFilter")
+    .addEventListener("change", function () {
+      const filterValue = this.value;
+      const rows = document.querySelectorAll(".product-row");
+      let visibleCount = 0;
+
+      rows.forEach((row) => {
+        const stock = parseInt(row.dataset.stock);
+        let shouldShow = true;
+
+        switch (filterValue) {
+          case "low":
+            shouldShow = stock < 10;
+            break;
+          case "medium":
+            shouldShow = stock >= 10 && stock <= 50;
+            break;
+          case "high":
+            shouldShow = stock > 50;
+            break;
+          default:
+            shouldShow = true;
+        }
+
+        if (shouldShow) {
+          row.style.display = "";
+          visibleCount++;
+        } else {
+          row.style.display = "none";
+        }
+      });
+
+      updateProductCount(visibleCount);
+    });
+
+  // Update product count
+  function updateProductCount(count) {
+    document.getElementById("productCount").textContent = count;
+  }
+
+  // Sort table functionality
+  function sortTable(columnIndex) {
+    const table = document.getElementById("productsTable");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll(".product-row"));
+
+    rows.sort((a, b) => {
+      const aValue = a.cells[columnIndex].textContent.trim();
+      const bValue = b.cells[columnIndex].textContent.trim();
+
+      // Handle numeric sorting for ID, stock, and price
+      if (columnIndex === 0 || columnIndex === 2 || columnIndex === 3) {
+        const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ""));
+        const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ""));
+        return aNum - bNum;
+      }
+
+      return aValue.localeCompare(bValue);
+    });
+
+    rows.forEach((row) => tbody.appendChild(row));
+  }
+</script>
+{% endblock %}

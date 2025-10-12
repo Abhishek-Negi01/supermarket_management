@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Inventory Management{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#eff6ff",
+                100: "#dbeafe",
+                200: "#bfdbfe",
+                300: "#93c5fd",
+                400: "#60a5fa",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+                800: "#1e40af",
+                900: "#1e3a8a",
+              },
+              dark: {
+                50: "#f8fafc",
+                100: "#f1f5f9",
+                200: "#e2e8f0",
+                300: "#cbd5e1",
+                400: "#94a3b8",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+                800: "#1e293b",
+                900: "#0f172a",
+              },
+            },
+            animation: {
+              "fade-in": "fadeIn 0.5s ease-in-out",
+              "slide-up": "slideUp 0.3s ease-out",
+              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              "bounce-slow": "bounce 2s infinite",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0", transform: "translateY(10px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+              slideUp: {
+                "0%": { opacity: "0", transform: "translateY(20px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="dark bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 min-h-screen transition-all duration-300"
+  >
+    <!-- Navigation -->
+    <nav
+      id="main-nav"
+      class="bg-dark-800/95 backdrop-blur-sm shadow-2xl border-b border-dark-700 sticky top-0 z-40 dark:bg-dark-800/95 dark:border-dark-700 bg-white/95 border-gray-200"
+    >
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+          <!-- Logo/Brand -->
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <i class="fas fa-store text-3xl text-primary-400"></i>
+            </div>
+            <a
+              href="{% url 'home' %}"
+              class="text-xl font-bold bg-gradient-to-r from-primary-400 to-primary-300 bg-clip-text text-transparent hover:from-primary-300 hover:to-primary-200 transition-all duration-300"
+            >
+              SuperMarket Pro
+            </a>
+          </div>
+
+          <!-- Navigation Links -->
+          <div class="hidden md:flex items-center space-x-2">
+            <a
+              href="{% url 'home' %}"
+              class="nav-link group flex items-center px-4 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-primary-600 hover:to-primary-500 hover:text-white transition-all duration-300 transform hover:scale-105"
+            >
+              <i class="fas fa-tachometer-alt mr-2"></i>
+              Dashboard
+            </a>
+            <a
+              href="{% url 'product_list' %}"
+              class="nav-link group flex items-center px-4 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-600 hover:to-emerald-500 hover:text-white transition-all duration-300 transform hover:scale-105"
+            >
+              <i class="fas fa-box mr-2"></i>
+              Products
+            </a>
+            <a
+              href="{% url 'purchase_list' %}"
+              class="nav-link group flex items-center px-4 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-500 hover:text-white transition-all duration-300 transform hover:scale-105"
+            >
+              <i class="fas fa-shopping-cart mr-2"></i>
+              Purchases
+            </a>
+            <a
+              href="{% url 'stock_adjustment_list' %}"
+              class="nav-link group flex items-center px-4 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-orange-600 hover:to-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105"
+            >
+              <i class="fas fa-adjust mr-2"></i>
+              Adjustments
+            </a>
+          </div>
+
+          <!-- Theme Toggle & Mobile Menu -->
+          <div class="flex items-center space-x-3">
+            <button
+              id="theme-toggle"
+              class="p-2 rounded-xl bg-gray-200 dark:bg-dark-700 hover:bg-gray-300 dark:hover:bg-dark-600 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-300 transform hover:scale-110"
+            >
+              <i class="fas fa-moon text-lg"></i>
+            </button>
+            <button
+              id="mobile-menu-btn"
+              class="md:hidden p-2 rounded-xl bg-gray-200 dark:bg-dark-700 hover:bg-gray-300 dark:hover:bg-dark-600 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-300"
+            >
+              <i class="fas fa-bars text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden pb-4 animate-slide-up">
+          <div
+            class="flex flex-col space-y-2 bg-gray-100 dark:bg-dark-700/50 rounded-xl p-4 mt-4"
+          >
+            <a
+              href="{% url 'home' %}"
+              class="flex items-center px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-primary-600 hover:to-primary-500 hover:text-white transition-all duration-300"
+            >
+              <i class="fas fa-tachometer-alt mr-3"></i>
+              Dashboard
+            </a>
+            <a
+              href="{% url 'product_list' %}"
+              class="flex items-center px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-600 hover:to-emerald-500 hover:text-white transition-all duration-300"
+            >
+              <i class="fas fa-box mr-3"></i>
+              Products
+            </a>
+            <a
+              href="{% url 'purchase_list' %}"
+              class="flex items-center px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-500 hover:text-white transition-all duration-300"
+            >
+              <i class="fas fa-shopping-cart mr-3"></i>
+              Purchases
+            </a>
+            <a
+              href="{% url 'stock_adjustment_list' %}"
+              class="flex items-center px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-orange-600 hover:to-orange-500 hover:text-white transition-all duration-300"
+            >
+              <i class="fas fa-adjust mr-3"></i>
+              Adjustments
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 animate-fade-in">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm border-t border-gray-200 dark:border-dark-700 mt-auto"
+    >
+      <div class="container mx-auto px-4 py-6 text-center">
+        <div class="flex items-center justify-center space-x-2 mb-2">
+          <i class="fas fa-heart text-red-400 animate-pulse"></i>
+          <p class="text-gray-600 dark:text-gray-400">
+            Made with love for inventory management
+          </p>
+        </div>
+        <p class="text-gray-500 dark:text-gray-500 text-sm">
+          &copy; 2024 SuperMarket Pro. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+      // Theme toggle
+      const themeToggle = document.getElementById("theme-toggle");
+      const html = document.documentElement;
+
+      // Set dark mode by default
+      html.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+
+      themeToggle.addEventListener("click", function () {
+        if (html.classList.contains("dark")) {
+          html.classList.remove("dark");
+          document.body.className =
+            "bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen transition-all duration-500";
+          themeToggle.innerHTML = '<i class="fas fa-sun text-lg"></i>';
+          localStorage.setItem("theme", "light");
+        } else {
+          html.classList.add("dark");
+          document.body.className =
+            "dark bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 min-h-screen transition-all duration-500";
+          themeToggle.innerHTML = '<i class="fas fa-moon text-lg"></i>';
+          localStorage.setItem("theme", "dark");
+        }
+      });
+
+      // Mobile menu toggle
+      document
+        .getElementById("mobile-menu-btn")
+        .addEventListener("click", function () {
+          const mobileMenu = document.getElementById("mobile-menu");
+          mobileMenu.classList.toggle("hidden");
+        });
+
+      // // Active nav link highlighting
+      // const currentPath = window.location.pathname;
+      // const navLinks = document.querySelectorAll(".nav-link");
+      // navLinks.forEach((link) => {
+      //   if (link.getAttribute("href") === currentPath) {
+      //     if (currentPath === "/") {
+      //       link.classList.add(
+      //         "bg-gradient-to-r",
+      //         "from-primary-600",
+      //         "to-primary-500",
+      //         "text-white"
+      //       );
+      //     } else if (currentPath.includes("product")) {
+      //       link.classList.add(
+      //         "bg-gradient-to-r",
+      //         "from-emerald-600",
+      //         "to-emerald-500",
+      //         "text-white"
+      //       );
+      //     } else if (currentPath.includes("purchase")) {
+      //       link.classList.add(
+      //         "bg-gradient-to-r",
+      //         "from-purple-600",
+      //         "to-purple-500",
+      //         "text-white"
+      //       );
+      //     } else if (currentPath.includes("adjustment")) {
+      //       link.classList.add(
+      //         "bg-gradient-to-r",
+      //         "from-orange-600",
+      //         "to-orange-500",
+      //         "text-white"
+      //       );
+      //     }
+      //     link.classList.remove("text-gray-300", "text-gray-700");
+      //   }
+      // });
+
+      // Active nav link highlighting
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll(".nav-link");
+      navLinks.forEach((link) => {
+        if (link.getAttribute("href") === currentPath) {
+          if (currentPath === "/home/") {
+            // Changed from "/" to "/home/"
+            link.classList.add(
+              "bg-gradient-to-r",
+              "from-primary-600",
+              "to-primary-500",
+              "text-white"
+            );
+          } else if (currentPath.includes("product")) {
+            link.classList.add(
+              "bg-gradient-to-r",
+              "from-emerald-600",
+              "to-emerald-500",
+              "text-white"
+            );
+          } else if (currentPath.includes("purchase")) {
+            link.classList.add(
+              "bg-gradient-to-r",
+              "from-purple-600",
+              "to-purple-500",
+              "text-white"
+            );
+          } else if (currentPath.includes("adjustment")) {
+            link.classList.add(
+              "bg-gradient-to-r",
+              "from-orange-600",
+              "to-orange-500",
+              "text-white"
+            );
+          }
+          link.classList.remove("text-gray-300", "text-gray-700");
+        }
+      });
+
+      // Smooth scroll animations
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      };
+
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-fade-in");
+          }
+        });
+      }, observerOptions);
+
+      // Observe all cards and sections
+      document.addEventListener("DOMContentLoaded", function () {
+        const elements = document.querySelectorAll(".bg-white, .bg-dark-800");
+        elements.forEach((el) => observer.observe(el));
+      });
+    </script>
+  </body>
+</html>

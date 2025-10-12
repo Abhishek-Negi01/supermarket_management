@@ -1,0 +1,283 @@
+{% extends 'inventory/base.html' %} {% block title %}Add Purchase - Inventory
+Management{% endblock %} {% block content %}
+<!-- Header -->
+<div class="mb-8">
+  <div class="flex items-center mb-4">
+    <a
+      href="{% url 'purchase_list' %}"
+      class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-4"
+    >
+      <i class="fas fa-arrow-left text-lg"></i>
+    </a>
+    <div>
+      <h1
+        class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent"
+      >
+        Add New Purchase
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 text-lg">
+        Record a new purchase transaction
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <!-- Form Card -->
+  <div
+    class="bg-white dark:bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-dark-700 overflow-hidden"
+  >
+    <div
+      class="px-6 py-5 bg-gray-50 dark:bg-dark-700/50 border-b border-gray-200 dark:border-dark-700"
+    >
+      <h2
+        class="text-xl font-semibold text-gray-800 dark:text-white flex items-center"
+      >
+        <i
+          class="fas fa-shopping-cart mr-3 text-purple-600 dark:text-purple-400"
+        ></i>
+        Purchase Information
+      </h2>
+    </div>
+
+    <form method="post" class="p-6 space-y-6" id="purchaseForm">
+      {% csrf_token %}
+
+      <!-- Product Selection -->
+      <div>
+        <label
+          for="{{ form.product.id_for_label }}"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Product *
+        </label>
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-box text-gray-500"></i>
+          </div>
+          {{ form.product }}
+        </div>
+        {% if form.product.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+          {{ form.product.errors.0 }}
+        </p>
+        {% endif %}
+      </div>
+
+      <!-- Supplier Selection -->
+      <div>
+        <label
+          for="{{ form.supplier.id_for_label }}"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Supplier *
+        </label>
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-truck text-gray-500"></i>
+          </div>
+          {{ form.supplier }}
+        </div>
+        {% if form.supplier.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+          {{ form.supplier.errors.0 }}
+        </p>
+        {% endif %}
+      </div>
+
+      <!-- Quantity and Price Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Quantity -->
+        <div>
+          <label
+            for="{{ form.quantity.id_for_label }}"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Quantity *
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-cubes text-gray-500"></i>
+            </div>
+            {{ form.quantity }}
+          </div>
+          {% if form.quantity.errors %}
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ form.quantity.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Purchase Price -->
+        <div>
+          <label
+            for="{{ form.purchase_price.id_for_label }}"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Purchase Price ($) *
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-dollar-sign text-gray-500"></i>
+            </div>
+            {{ form.purchase_price }}
+          </div>
+          {% if form.purchase_price.errors %}
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ form.purchase_price.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div
+        class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-dark-700"
+      >
+        <a
+          href="{% url 'purchase_list' %}"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-700 hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors"
+        >
+          <i class="fas fa-times mr-2"></i>
+          Cancel
+        </a>
+
+        <button
+          type="submit"
+          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl hover:from-purple-500 hover:to-purple-400 transition-all duration-300 shadow-lg transform hover:scale-105"
+        >
+          <i class="fas fa-plus mr-2"></i>
+          Add Purchase
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Help Card -->
+  <div
+    class="mt-6 bg-purple-500/10 border border-purple-500/20 rounded-2xl p-6"
+  >
+    <div class="flex items-start">
+      <div class="bg-purple-500/20 p-3 rounded-xl mr-4">
+        <i class="fas fa-info-circle text-purple-600 dark:text-purple-400"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white mb-3">
+          Purchase Recording Tips
+        </h3>
+        <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+          <li>• Select the correct product from the dropdown</li>
+          <li>• Choose the appropriate supplier</li>
+          <li>• Enter the exact quantity purchased</li>
+          <li>• Record the actual purchase price paid</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  #id_product,
+  #id_supplier,
+  #id_quantity,
+  #id_purchase_price {
+    display: block;
+    width: 100%;
+    padding-left: 2.5rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+    color: #374151;
+  }
+
+  .dark #id_product,
+  .dark #id_supplier,
+  .dark #id_quantity,
+  .dark #id_purchase_price {
+    border-color: #475569;
+    background-color: #1e293b;
+    color: #ffffff;
+  }
+
+  #id_product:focus,
+  #id_supplier:focus,
+  #id_quantity:focus,
+  #id_purchase_price:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+  }
+</style>
+
+<!-- JavaScript for Form Enhancement -->
+<script>
+  // Auto-focus first field
+  document.getElementById("id_product").focus();
+
+  // Form validation
+  document
+    .getElementById("purchaseForm")
+    .addEventListener("submit", function (e) {
+      const product = document.getElementById("id_product").value;
+      const supplier = document.getElementById("id_supplier").value;
+      const quantity = document.getElementById("id_quantity").value;
+      const price = document.getElementById("id_purchase_price").value;
+
+      if (!product) {
+        e.preventDefault();
+        alert("Please select a product");
+        document.getElementById("id_product").focus();
+        return;
+      }
+
+      if (!supplier) {
+        e.preventDefault();
+        alert("Please select a supplier");
+        document.getElementById("id_supplier").focus();
+        return;
+      }
+
+      if (!quantity || parseInt(quantity) <= 0) {
+        e.preventDefault();
+        alert("Please enter a valid quantity");
+        document.getElementById("id_quantity").focus();
+        return;
+      }
+
+      if (!price || parseFloat(price) <= 0) {
+        e.preventDefault();
+        alert("Please enter a valid purchase price");
+        document.getElementById("id_purchase_price").focus();
+        return;
+      }
+    });
+
+  // Real-time price formatting
+  document
+    .getElementById("id_purchase_price")
+    .addEventListener("input", function () {
+      let value = this.value;
+      value = value.replace(/[^0-9.]/g, "");
+      const parts = value.split(".");
+      if (parts.length > 2) {
+        value = parts[0] + "." + parts.slice(1).join("");
+      }
+      if (parts[1] && parts[1].length > 2) {
+        value = parts[0] + "." + parts[1].substring(0, 2);
+      }
+      this.value = value;
+    });
+</script>
+{% endblock %}

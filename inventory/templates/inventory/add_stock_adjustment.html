@@ -1,0 +1,290 @@
+{% extends 'inventory/base.html' %} {% block title %}Add Stock Adjustment -
+Inventory Management{% endblock %} {% block content %}
+<!-- Header -->
+<div class="mb-8">
+  <div class="flex items-center mb-4">
+    <a
+      href="{% url 'stock_adjustment_list' %}"
+      class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mr-4"
+    >
+      <i class="fas fa-arrow-left text-lg"></i>
+    </a>
+    <div>
+      <h1
+        class="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent"
+      >
+        Add Stock Adjustment
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 text-lg">
+        Adjust inventory levels for products
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <!-- Form Card -->
+  <div
+    class="bg-white dark:bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-dark-700 overflow-hidden"
+  >
+    <div
+      class="px-6 py-5 bg-gray-50 dark:bg-dark-700/50 border-b border-gray-200 dark:border-dark-700"
+    >
+      <h2
+        class="text-xl font-semibold text-gray-800 dark:text-white flex items-center"
+      >
+        <i class="fas fa-adjust mr-3 text-orange-600 dark:text-orange-400"></i>
+        Adjustment Information
+      </h2>
+    </div>
+
+    <form method="post" class="p-6 space-y-6" id="adjustmentForm">
+      {% csrf_token %}
+
+      <!-- Product Selection -->
+      <div>
+        <label
+          for="{{ form.product.id_for_label }}"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Product *
+        </label>
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-box text-gray-500"></i>
+          </div>
+          {{ form.product }}
+        </div>
+        {% if form.product.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+          {{ form.product.errors.0 }}
+        </p>
+        {% endif %}
+      </div>
+
+      <!-- Quantity Change and Employee Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Quantity Change -->
+        <div>
+          <label
+            for="{{ form.quantity_change.id_for_label }}"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Quantity Change *
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-plus-minus text-gray-500"></i>
+            </div>
+            {{ form.quantity_change }}
+          </div>
+          {% if form.quantity_change.errors %}
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ form.quantity_change.errors.0 }}
+          </p>
+          {% endif %}
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Use positive numbers to add, negative to subtract
+          </p>
+        </div>
+
+        <!-- Employee -->
+        <div>
+          <label
+            for="{{ form.employee.id_for_label }}"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Employee
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-user text-gray-500"></i>
+            </div>
+            {{ form.employee }}
+          </div>
+          {% if form.employee.errors %}
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ form.employee.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Reason -->
+      <div>
+        <label
+          for="{{ form.reason.id_for_label }}"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Reason for Adjustment
+        </label>
+        <div class="relative">
+          <div class="absolute top-3 left-3 pointer-events-none">
+            <i class="fas fa-comment text-gray-500"></i>
+          </div>
+          {{ form.reason }}
+        </div>
+        {% if form.reason.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+          {{ form.reason.errors.0 }}
+        </p>
+        {% endif %}
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Explain why this adjustment is being made
+        </p>
+      </div>
+
+      <!-- Form Actions -->
+      <div
+        class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-dark-700"
+      >
+        <a
+          href="{% url 'stock_adjustment_list' %}"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-700 hover:bg-gray-50 dark:hover:bg-dark-600 transition-colors"
+        >
+          <i class="fas fa-times mr-2"></i>
+          Cancel
+        </a>
+
+        <button
+          type="submit"
+          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-xl hover:from-orange-500 hover:to-orange-400 transition-all duration-300 shadow-lg transform hover:scale-105"
+        >
+          <i class="fas fa-plus mr-2"></i>
+          Add Adjustment
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Help Card -->
+  <div
+    class="mt-6 bg-orange-500/10 border border-orange-500/20 rounded-2xl p-6"
+  >
+    <div class="flex items-start">
+      <div class="bg-orange-500/20 p-3 rounded-xl mr-4">
+        <i class="fas fa-info-circle text-orange-600 dark:text-orange-400"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-white mb-3">
+          Stock Adjustment Guidelines
+        </h3>
+        <ul class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+          <li>• Use positive numbers (+) to increase stock</li>
+          <li>• Use negative numbers (-) to decrease stock</li>
+          <li>• Always provide a clear reason for the adjustment</li>
+          <li>• Select the responsible employee if applicable</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  #id_product,
+  #id_employee,
+  #id_quantity_change {
+    display: block;
+    width: 100%;
+    padding-left: 2.5rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+    color: #374151;
+  }
+
+  #id_reason {
+    display: block;
+    width: 100%;
+    padding-left: 2.5rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+    color: #374151;
+    resize: none;
+    min-height: 80px;
+  }
+
+  .dark #id_product,
+  .dark #id_employee,
+  .dark #id_quantity_change,
+  .dark #id_reason {
+    border-color: #475569 !important;
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+  }
+  
+  .dark #id_product option,
+  .dark #id_employee option {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+  }
+
+  #id_product:focus,
+  #id_employee:focus,
+  #id_quantity_change:focus,
+  #id_reason:focus {
+    outline: none;
+    border-color: #ea580c;
+    box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.3);
+  }
+</style>
+
+<!-- JavaScript for Form Enhancement -->
+<script>
+  // Auto-focus first field
+  document.getElementById("id_product").focus();
+
+  // Form validation
+  document
+    .getElementById("adjustmentForm")
+    .addEventListener("submit", function (e) {
+      const product = document.getElementById("id_product").value;
+      const quantityChange =
+        document.getElementById("id_quantity_change").value;
+
+      if (!product) {
+        e.preventDefault();
+        alert("Please select a product");
+        document.getElementById("id_product").focus();
+        return;
+      }
+
+      if (!quantityChange || quantityChange == 0) {
+        e.preventDefault();
+        alert("Please enter a quantity change (cannot be zero)");
+        document.getElementById("id_quantity_change").focus();
+        return;
+      }
+    });
+
+  // Visual feedback for quantity change
+  document
+    .getElementById("id_quantity_change")
+    .addEventListener("input", function () {
+      const value = parseInt(this.value);
+      const icon = this.parentElement.querySelector("i");
+
+      if (value > 0) {
+        icon.className = "fas fa-arrow-up text-green-500";
+      } else if (value < 0) {
+        icon.className = "fas fa-arrow-down text-red-500";
+      } else {
+        icon.className = "fas fa-plus-minus text-gray-500";
+      }
+    });
+</script>
+{% endblock %}

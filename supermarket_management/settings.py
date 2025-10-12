@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'inventory',
     'billing',
+
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -79,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'supermarket_db',
         'USER': 'root',
-        'PASSWORD': '9634',
+        'PASSWORD': 'abhishek',
         'HOST': 'localhost',
         'PORT': '3306',
     }

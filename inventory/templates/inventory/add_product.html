@@ -1,0 +1,299 @@
+{% extends 'inventory/base.html' %} {% block title %}Add Product - Inventory
+Management{% endblock %} {% block content %}
+<!-- Header -->
+<div class="mb-8">
+  <div class="flex items-center mb-4">
+    <a
+      href="{% url 'product_list' %}"
+      class="text-gray-400 hover:text-white mr-4"
+    >
+      <i class="fas fa-arrow-left text-lg"></i>
+    </a>
+    <div>
+      <h1
+        class="text-4xl font-bold bg-gradient-to-r from-primary-400 to-primary-300 bg-clip-text text-transparent"
+      >
+        Add New Product
+      </h1>
+      <p class="text-gray-400 text-lg">Add a new item to your inventory</p>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-2xl mx-auto">
+  <!-- Form Card -->
+  <div
+    class="bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-dark-700 overflow-hidden"
+  >
+    <div class="px-6 py-5 bg-dark-700/50 border-b border-dark-700">
+      <h2 class="text-xl font-semibold text-white flex items-center">
+        <i class="fas fa-box mr-3 text-primary-400"></i>
+        Product Information
+      </h2>
+    </div>
+
+    <form method="post" class="p-6 space-y-6" id="productForm">
+      {% csrf_token %}
+
+      <!-- Product Name -->
+      <div>
+        <label
+          for="{{ form.name.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-2"
+        >
+          Product Name *
+        </label>
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-tag text-gray-500"></i>
+          </div>
+          {{ form.name }}
+        </div>
+        {% if form.name.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ form.name.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label
+          for="{{ form.description.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-2"
+        >
+          Description
+        </label>
+        <div class="relative">
+          <div class="absolute top-3 left-3 pointer-events-none">
+            <i class="fas fa-align-left text-gray-500"></i>
+          </div>
+          {{ form.description }}
+        </div>
+        {% if form.description.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Price and Stock Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Price -->
+        <div>
+          <label
+            for="{{ form.price.id_for_label }}"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Price ($) *
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-dollar-sign text-gray-500"></i>
+            </div>
+            {{ form.price }}
+          </div>
+          {% if form.price.errors %}
+          <p class="mt-1 text-sm text-red-400">{{ form.price.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Stock Quantity -->
+        <div>
+          <label
+            for="{{ form.quantity_in_stock.id_for_label }}"
+            class="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Initial Stock *
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-cubes text-gray-500"></i>
+            </div>
+            {{ form.quantity_in_stock }}
+          </div>
+          {% if form.quantity_in_stock.errors %}
+          <p class="mt-1 text-sm text-red-400">
+            {{ form.quantity_in_stock.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Expiry Date -->
+      <div>
+        <label
+          for="{{ form.expiry_date.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-2"
+        >
+          Expiry Date (Optional)
+        </label>
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-calendar text-gray-500"></i>
+          </div>
+          {{ form.expiry_date }}
+        </div>
+        {% if form.expiry_date.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ form.expiry_date.errors.0 }}</p>
+        {% endif %}
+        <p class="mt-1 text-sm text-gray-400">
+          Leave empty if the product doesn't expire
+        </p>
+      </div>
+
+      <!-- Form Actions -->
+      <div
+        class="flex items-center justify-between pt-6 border-t border-dark-700"
+      >
+        <a
+          href="{% url 'product_list' %}"
+          class="inline-flex items-center px-4 py-2 border border-dark-600 rounded-xl text-gray-300 bg-dark-700 hover:bg-dark-600 transition-colors"
+        >
+          <i class="fas fa-times mr-2"></i>
+          Cancel
+        </a>
+
+        <button
+          type="submit"
+          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl hover:from-primary-500 hover:to-primary-400 transition-all duration-300 shadow-lg transform hover:scale-105"
+        >
+          <i class="fas fa-plus mr-2"></i>
+          Add Product
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Help Card -->
+  <div
+    class="mt-6 bg-primary-500/10 border border-primary-500/20 rounded-2xl p-6"
+  >
+    <div class="flex items-start">
+      <div class="bg-primary-500/20 p-3 rounded-xl mr-4">
+        <i class="fas fa-info-circle text-primary-400"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-white mb-3">
+          Tips for Adding Products
+        </h3>
+        <ul class="text-sm text-gray-300 space-y-2">
+          <li>• Use clear, descriptive names for easy identification</li>
+          <li>• Set accurate initial stock quantities</li>
+          <li>• Add expiry dates for perishable items</li>
+          <li>
+            • Include detailed descriptions for better inventory management
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  #id_name,
+  #id_price,
+  #id_quantity_in_stock,
+  #id_expiry_date {
+    display: block;
+    width: 100%;
+    padding-left: 2.5rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border: 1px solid #475569;
+    border-radius: 0.75rem;
+    background-color: #1e293b;
+    color: #ffffff;
+  }
+
+  #id_name:focus,
+  #id_price:focus,
+  #id_quantity_in_stock:focus,
+  #id_expiry_date:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+
+  #id_description {
+    display: block;
+    width: 100%;
+    padding-left: 2.5rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border: 1px solid #475569;
+    border-radius: 0.75rem;
+    background-color: #1e293b;
+    color: #ffffff;
+    resize: none;
+    min-height: 80px;
+  }
+
+  #id_description:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+
+  #id_expiry_date {
+    cursor: pointer;
+  }
+</style>
+
+<!-- JavaScript for Form Enhancement -->
+<script>
+  // Auto-focus first field
+  document.getElementById("id_name").focus();
+
+  // Form validation
+  document
+    .getElementById("productForm")
+    .addEventListener("submit", function (e) {
+      const name = document.getElementById("id_name").value.trim();
+      const price = document.getElementById("id_price").value;
+      const stock = document.getElementById("id_quantity_in_stock").value;
+
+      if (!name) {
+        e.preventDefault();
+        alert("Please enter a product name");
+        document.getElementById("id_name").focus();
+        return;
+      }
+
+      if (!price || parseFloat(price) <= 0) {
+        e.preventDefault();
+        alert("Please enter a valid price");
+        document.getElementById("id_price").focus();
+        return;
+      }
+
+      if (!stock || parseInt(stock) < 0) {
+        e.preventDefault();
+        alert("Please enter a valid stock quantity");
+        document.getElementById("id_quantity_in_stock").focus();
+        return;
+      }
+    });
+
+  // Real-time price formatting
+  document.getElementById("id_price").addEventListener("input", function () {
+    let value = this.value;
+    value = value.replace(/[^0-9.]/g, "");
+    const parts = value.split(".");
+    if (parts.length > 2) {
+      value = parts[0] + "." + parts.slice(1).join("");
+    }
+    if (parts[1] && parts[1].length > 2) {
+      value = parts[0] + "." + parts[1].substring(0, 2);
+    }
+    this.value = value;
+  });
+</script>
+{% endblock %}
