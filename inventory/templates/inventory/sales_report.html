@@ -1,0 +1,137 @@
+{% extends 'inventory/base.html' %}
+{% block title %}Sales Report - SuperMarket Pro{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold text-white mb-2">Sales Report</h1>
+      <p class="text-gray-400">Revenue and transaction analytics</p>
+    </div>
+    <a href="{% url 'reports_dashboard' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all">
+      <i class="fas fa-arrow-left mr-2"></i>Back to Reports
+    </a>
+  </div>
+</div>
+
+<!-- Sales Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div class="bg-dark-800/50 rounded-2xl p-6 border border-dark-700">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-400 text-sm">Order Sales</p>
+        <p class="text-2xl font-bold text-emerald-400">₹{{ order_total|floatformat:2 }}</p>
+      </div>
+      <div class="bg-emerald-500/20 p-3 rounded-xl">
+        <i class="fas fa-shopping-cart text-emerald-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-dark-800/50 rounded-2xl p-6 border border-dark-700">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-400 text-sm">QR Scan Sales</p>
+        <p class="text-2xl font-bold text-blue-400">₹{{ qr_total|floatformat:2 }}</p>
+      </div>
+      <div class="bg-blue-500/20 p-3 rounded-xl">
+        <i class="fas fa-qrcode text-blue-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-dark-800/50 rounded-2xl p-6 border border-dark-700">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-400 text-sm">Total Revenue</p>
+        <p class="text-2xl font-bold text-yellow-400">₹{{ grand_total|floatformat:2 }}</p>
+      </div>
+      <div class="bg-yellow-500/20 p-3 rounded-xl">
+        <i class="fas fa-chart-line text-yellow-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Sales Table -->
+<div class="bg-dark-800/50 rounded-2xl shadow-xl border border-dark-700 overflow-hidden mb-8">
+  <div class="px-6 py-4 border-b border-dark-700">
+    <h2 class="text-xl font-semibold text-white">Recent Orders</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="bg-dark-700/50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Order #</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Customer</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Date</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Total</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-dark-700">
+        {% for order in orders %}
+        <tr class="hover:bg-dark-700/30 transition-all">
+          <td class="px-6 py-4 text-white font-semibold">#{{ order.id }}</td>
+          <td class="px-6 py-4 text-gray-300">{{ order.user.username }}</td>
+          <td class="px-6 py-4 text-gray-300">{{ order.created_at|date:"M d, Y" }}</td>
+          <td class="px-6 py-4 text-emerald-400 font-semibold">₹{{ order.total_price }}</td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 bg-green-500/20 text-green-300 rounded-lg text-xs">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-6 py-12 text-center text-gray-400">
+            <i class="fas fa-shopping-cart text-4xl mb-4"></i>
+            <p>No order sales available</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- QR Scan Sales Table -->
+<div class="bg-dark-800/50 rounded-2xl shadow-xl border border-dark-700 overflow-hidden">
+  <div class="px-6 py-4 border-b border-dark-700">
+    <h2 class="text-xl font-semibold text-white">QR Scan Sales</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="bg-dark-700/50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Scan #</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Product</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Quantity</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Price</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Total</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-dark-700">
+        {% for scan in qr_sales %}
+        <tr class="hover:bg-dark-700/30 transition-all">
+          <td class="px-6 py-4 text-white font-semibold">#{{ scan.id }}</td>
+          <td class="px-6 py-4 text-gray-300">{{ scan.product.name }}</td>
+          <td class="px-6 py-4 text-gray-300">{{ scan.quantity }}</td>
+          <td class="px-6 py-4 text-gray-300">₹{{ scan.product.price }}</td>
+          <td class="px-6 py-4 text-blue-400 font-semibold">₹{{ scan.total }}</td>
+          <td class="px-6 py-4 text-gray-300">{{ scan.timestamp|date:"M d, Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+            <i class="fas fa-qrcode text-4xl mb-4"></i>
+            <p>No QR scan sales available</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

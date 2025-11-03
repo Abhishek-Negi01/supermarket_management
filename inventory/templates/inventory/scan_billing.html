@@ -1,0 +1,215 @@
+{% extends 'inventory/base.html' %}
+{% block title %}QR Scanner - SuperMarket Pro{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col">
+  <!-- Header -->
+  <div class="text-center py-4 px-4">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center justify-center">
+      <i class="fas fa-camera text-indigo-400 mr-2 md:mr-3"></i>
+      QR Scanner
+    </h1>
+    <p class="text-gray-400 text-sm md:text-base">Scan product QR codes for billing</p>
+  </div>
+
+  <!-- Mobile-First Layout -->
+  <div class="flex-1 px-4 pb-4">
+    <!-- Scanner Section -->
+    <div class="bg-dark-800/50 rounded-2xl p-4 md:p-6 border border-dark-700 mb-4">
+      <div class="text-center mb-4">
+        <h3 class="text-lg md:text-xl font-semibold text-white flex items-center justify-center">
+          <i class="fas fa-qrcode text-indigo-400 mr-2"></i>
+          Scanner
+        </h3>
+      </div>
+      
+      <!-- Scanner Container -->
+      <div class="relative">
+        <div id="reader" class="w-full max-w-sm mx-auto bg-dark-700 rounded-xl overflow-hidden"></div>
+        <div class="mt-3 text-center">
+          <p class="text-gray-400 text-xs md:text-sm">Position QR code within frame</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section - Always visible on mobile -->
+    <div class="bg-dark-800/50 rounded-2xl p-4 md:p-6 border border-dark-700 mb-4">
+      <div class="text-center mb-4">
+        <h3 class="text-lg md:text-xl font-semibold text-white flex items-center justify-center">
+          <i class="fas fa-list text-green-400 mr-2"></i>
+          Scan Results
+        </h3>
+      </div>
+      
+      <!-- Results Display -->
+      <div id="result" class="mb-4">
+        <div class="p-3 md:p-4 bg-dark-700/50 rounded-xl text-center text-gray-400">
+          <i class="fas fa-qrcode text-2xl md:text-4xl mb-2"></i>
+          <p class="text-sm md:text-base">Scan a QR code to see results</p>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <a href="{% url 'cart_summary' %}" class="flex items-center justify-center px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all text-sm md:text-base">
+          <i class="fas fa-shopping-cart mr-2"></i>
+          View Cart
+        </a>
+        <a href="{% url 'qr_dashboard' %}" class="flex items-center justify-center px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all text-sm md:text-base">
+          <i class="fas fa-tachometer-alt mr-2"></i>
+          Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  let isScanning = false; // Prevent multiple scans
+  
+  function onScanSuccess(decodedText, decodedResult) {
+    // Prevent multiple scans within cooldown period
+    if (isScanning) {
+      $("#result").html(`
+        <div class="p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl text-center">
+          <i class="fas fa-clock text-yellow-400 text-xl mb-2"></i>
+          <p class="text-yellow-300 font-semibold">Please Wait</p>
+          <p class="text-gray-400 text-sm">Processing previous scan...</p>
+        </div>
+      `);
+      return;
+    }
+    isScanning = true;
+    // Show scanning animation
+    $("#result").html(`
+      <div class="p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl text-center">
+        <i class="fas fa-spinner fa-spin text-blue-400 text-2xl mb-2"></i>
+        <p class="text-blue-300">Processing scan...</p>
+        <p class="text-gray-400 text-sm">QR: ${decodedText}</p>
+      </div>
+    `);
+    
+    // Parse QR code content (format: "id,name,price")
+    const qrParts = decodedText.split(',');
+    const productId = qrParts[0];
+    
+    $.post("{% url 'api_scan_product' %}", {
+      product_id: productId,
+      quantity: 1,
+      scan_type: 'BILL',
+      csrfmiddlewaretoken: "{{ csrf_token }}",
+    }).done(function (data) {
+      if (data.success) {
+        $("#result").html(`
+          <div class="p-4 bg-green-500/20 border border-green-500/30 rounded-xl">
+            <div class="flex items-center mb-3">
+              <i class="fas fa-check-circle text-green-400 text-xl mr-3"></i>
+              <h4 class="text-green-300 font-semibold">Product Scanned!</h4>
+            </div>
+            <div class="space-y-2">
+              <p class="text-white font-medium">${data.product_name}</p>
+              <p class="text-gray-300">Price: ₹${data.price}</p>
+              <p class="text-gray-300">Remaining Stock: ${data.remaining_stock} units</p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-green-500/30">
+              <p class="text-green-300 text-sm"><i class="fas fa-check mr-1"></i> Stock updated automatically</p>
+            </div>
+          </div>
+        `);
+        
+        // Clear result after 5 seconds and allow next scan
+        setTimeout(function() {
+          $("#result").html(`
+            <div class="p-4 bg-dark-700/50 rounded-xl text-center text-gray-400">
+              <i class="fas fa-qrcode text-4xl mb-2"></i>
+              <p>Scan a QR code to see results here</p>
+            </div>
+          `);
+          isScanning = false; // Allow next scan
+        }, 5000);
+      } else {
+        $("#result").html(`
+          <div class="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-center">
+            <i class="fas fa-exclamation-triangle text-red-400 text-xl mb-2"></i>
+            <p class="text-red-300 font-semibold">Error</p>
+            <p class="text-gray-400 text-sm">${data.error}</p>
+          </div>
+        `);
+        
+        // Clear error after 3 seconds and allow next scan
+        setTimeout(function() {
+          $("#result").html(`
+            <div class="p-4 bg-dark-700/50 rounded-xl text-center text-gray-400">
+              <i class="fas fa-qrcode text-4xl mb-2"></i>
+              <p>Scan a QR code to see results here</p>
+            </div>
+          `);
+          isScanning = false; // Allow next scan
+        }, 3000);
+      }
+    }).fail(function() {
+      $("#result").html(`
+        <div class="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-center">
+          <i class="fas fa-exclamation-triangle text-red-400 text-xl mb-2"></i>
+          <p class="text-red-300 font-semibold">Connection Error</p>
+          <p class="text-gray-400 text-sm">Please try again</p>
+        </div>
+      `);
+      
+      // Clear connection error after 3 seconds and allow next scan
+      setTimeout(function() {
+        $("#result").html(`
+          <div class="p-4 bg-dark-700/50 rounded-xl text-center text-gray-400">
+            <i class="fas fa-qrcode text-4xl mb-2"></i>
+            <p>Scan a QR code to see results here</p>
+          </div>
+        `);
+        isScanning = false; // Allow next scan
+      }, 3000);
+    });
+  }
+
+  function onScanFailure(error) {
+    // Handle scan failure silently
+  }
+
+  // Initialize scanner with responsive settings
+  function getQrBoxSize() {
+    const screenWidth = window.innerWidth;
+    if (screenWidth < 400) {
+      return { width: 200, height: 200 };
+    } else if (screenWidth < 600) {
+      return { width: 250, height: 250 };
+    } else {
+      return { width: 300, height: 300 };
+    }
+  }
+
+  var html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: getQrBoxSize(),
+    rememberLastUsedCamera: true,
+    aspectRatio: 1.0
+  }, false);
+
+  // Reinitialize on window resize
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      html5QrcodeScanner.clear();
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+        fps: 10,
+        qrbox: getQrBoxSize(),
+        rememberLastUsedCamera: true,
+        aspectRatio: 1.0
+      }, false);
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    }, 500);
+  });
+  
+  html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+</script>
+{% endblock %}

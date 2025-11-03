@@ -1,0 +1,188 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Alert Management{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-4xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent mb-3">
+        Alert Management Center
+    </h1>
+    <p class="text-gray-400 text-lg">Monitor and manage inventory alerts</p>
+</div>
+
+<!-- Alert Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-red-600/20 to-red-500/20 rounded-2xl p-6 border border-red-500/30">
+        <div class="flex items-center justify-between mb-4">
+            <div class="bg-red-500/20 p-3 rounded-xl">
+                <i class="fas fa-times-circle text-red-400 text-2xl"></i>
+            </div>
+            <span class="text-3xl font-bold text-red-400">{{ alert_counts.out_of_stock }}</span>
+        </div>
+        <h3 class="text-white font-semibold mb-1">Out of Stock</h3>
+        <p class="text-red-300 text-sm">Products unavailable</p>
+    </div>
+
+    <div class="bg-gradient-to-br from-yellow-600/20 to-yellow-500/20 rounded-2xl p-6 border border-yellow-500/30">
+        <div class="flex items-center justify-between mb-4">
+            <div class="bg-yellow-500/20 p-3 rounded-xl">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
+            </div>
+            <span class="text-3xl font-bold text-yellow-400">{{ alert_counts.low_stock }}</span>
+        </div>
+        <h3 class="text-white font-semibold mb-1">Low Stock</h3>
+        <p class="text-yellow-300 text-sm">Need reordering</p>
+    </div>
+
+    <div class="bg-gradient-to-br from-blue-600/20 to-blue-500/20 rounded-2xl p-6 border border-blue-500/30">
+        <div class="flex items-center justify-between mb-4">
+            <div class="bg-blue-500/20 p-3 rounded-xl">
+                <i class="fas fa-rocket text-blue-400 text-2xl"></i>
+            </div>
+            <span class="text-3xl font-bold text-blue-400">{{ alert_counts.fast_moving }}</span>
+        </div>
+        <h3 class="text-white font-semibold mb-1">Fast Moving</h3>
+        <p class="text-blue-300 text-sm">High demand items</p>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-600/20 to-purple-500/20 rounded-2xl p-6 border border-purple-500/30">
+        <div class="space-y-3">
+            <button class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl transition-colors" onclick="triggerAlertCheck()">
+                <i class="fas fa-sync mr-2"></i>Check Alerts
+            </button>
+            <a href="{% url 'export_stock_csv' %}" class="block w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-xl text-center transition-colors">
+                <i class="fas fa-download mr-2"></i>Export CSV
+            </a>
+            <a href="{% url 'export_analytics_pdf' %}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-center transition-colors">
+                <i class="fas fa-file-pdf mr-2"></i>Export PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Active Alerts -->
+<div class="bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-dark-700 mb-6">
+    <div class="px-6 py-4 border-b border-dark-700">
+        <h2 class="text-xl font-semibold text-white flex items-center">
+            <i class="fas fa-bell text-red-400 mr-3"></i>
+            Active Alerts ({{ active_alerts.count }})
+        </h2>
+    </div>
+    <div class="p-6">
+        {% if active_alerts %}
+            <div class="space-y-4">
+                {% for alert in active_alerts %}
+                <div class="bg-dark-700/50 rounded-xl p-4 border-l-4 
+                    {% if alert.alert_type == 'OUT_OF_STOCK' %}border-red-500
+                    {% elif alert.alert_type == 'LOW_STOCK' %}border-yellow-500
+                    {% elif alert.alert_type == 'FAST_MOVING' %}border-blue-500
+                    {% else %}border-gray-500{% endif %}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="
+                                {% if alert.alert_type == 'OUT_OF_STOCK' %}bg-red-500/20 text-red-400
+                                {% elif alert.alert_type == 'LOW_STOCK' %}bg-yellow-500/20 text-yellow-400
+                                {% elif alert.alert_type == 'FAST_MOVING' %}bg-blue-500/20 text-blue-400
+                                {% else %}bg-gray-500/20 text-gray-400{% endif %} p-3 rounded-xl">
+                                <i class="fas fa-
+                                    {% if alert.alert_type == 'OUT_OF_STOCK' %}times-circle
+                                    {% elif alert.alert_type == 'LOW_STOCK' %}exclamation-triangle
+                                    {% elif alert.alert_type == 'FAST_MOVING' %}rocket
+                                    {% else %}bell{% endif %} text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">{{ alert.product.name }}</h3>
+                                <p class="text-gray-400 text-sm">{{ alert.get_alert_type_display }} - Stock: {{ alert.product.quantity_in_stock }} units</p>
+                                <p class="text-gray-500 text-xs">Created: {{ alert.created_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        <button class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors" onclick="dismissAlert({{ alert.id }})">
+                            <i class="fas fa-times mr-2"></i>Dismiss
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-check-circle text-green-400 text-4xl mb-4"></i>
+                <h3 class="text-white text-lg font-semibold mb-2">No Active Alerts</h3>
+                <p class="text-gray-400">All inventory levels are within normal ranges</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recently Dismissed Alerts -->
+<div class="bg-dark-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-dark-700">
+    <div class="px-6 py-4 border-b border-dark-700">
+        <h2 class="text-xl font-semibold text-white flex items-center">
+            <i class="fas fa-history text-gray-400 mr-3"></i>
+            Recently Dismissed ({{ dismissed_alerts.count }})
+        </h2>
+    </div>
+    <div class="p-6">
+        {% if dismissed_alerts %}
+            <div class="space-y-3">
+                {% for alert in dismissed_alerts %}
+                <div class="bg-dark-700/30 rounded-lg p-3 opacity-60">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-check text-gray-500"></i>
+                            <div>
+                                <span class="text-gray-300">{{ alert.product.name }}</span>
+                                <span class="text-gray-500 text-sm ml-2">{{ alert.get_alert_type_display }}</span>
+                            </div>
+                        </div>
+                        <span class="text-gray-500 text-xs">{{ alert.created_at|date:"M d" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500 text-center py-8">No dismissed alerts</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function dismissAlert(alertId) {
+    if (confirm('Dismiss this alert?')) {
+        fetch(`/api/dismiss-alert/${alertId}/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+
+function triggerAlertCheck() {
+    const button = event.target;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking...';
+    
+    fetch('/api/trigger-alert-check/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-sync mr-2"></i>Check Alerts';
+    });
+}
+</script>
+{% endblock %}

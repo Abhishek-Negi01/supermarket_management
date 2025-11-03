@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Analytics Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .section { margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .alert-high { color: #d32f2f; }
+        .alert-medium { color: #f57c00; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Inventory Analytics Report</h1>
+        <p>Generated on: {{ "now"|date:"F d, Y H:i" }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Summary</h2>
+        <p>Total Products: {{ total_products }}</p>
+        <p>Active Alerts: {{ active_alerts.count }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Fast Moving Products</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Velocity (units/day)</th>
+                    <th>Current Stock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in fast_moving_products %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.velocity|floatformat:1 }}</td>
+                    <td>{{ item.current_stock }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Low Stock Products</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Current Stock</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in low_stock_products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td class="{% if product.quantity_in_stock == 0 %}alert-high{% else %}alert-medium{% endif %}">
+                        {{ product.quantity_in_stock }}
+                    </td>
+                    <td>₹{{ product.price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

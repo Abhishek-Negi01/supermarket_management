@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Label - {{ product.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        .label {
+            width: 300px;
+            margin: 0 auto;
+            text-align: center;
+            border: 2px solid #333;
+            padding: 20px;
+            background: white;
+        }
+        .qr-code {
+            margin: 10px 0;
+        }
+        .qr-code img {
+            width: 150px;
+            height: 150px;
+        }
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .product-price {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        .product-id {
+            font-size: 12px;
+            color: #999;
+            margin: 5px 0;
+        }
+        @media print {
+            body { margin: 0; padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #007cba; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Print Label
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            Close
+        </button>
+    </div>
+
+    <div class="label">
+        <div class="product-name">{{ product.name }}</div>
+        
+        <div class="qr-code">
+            {% if product.qr_code %}
+                <img src="{{ product.qr_code.url }}" alt="QR Code for {{ product.name }}">
+            {% else %}
+                <div style="width: 150px; height: 150px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    No QR Code
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="product-price">₹{{ product.price }}</div>
+        <div class="product-id">ID: {{ product.id }}</div>
+        
+        {% if product.expiry_date %}
+        <div style="font-size: 12px; color: #666; margin-top: 10px;">
+            Expires: {{ product.expiry_date|date:"M d, Y" }}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

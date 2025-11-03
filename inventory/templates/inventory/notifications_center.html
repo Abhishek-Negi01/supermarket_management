@@ -1,0 +1,120 @@
+{% extends 'inventory/base.html' %}
+{% block title %}Notifications Center - SuperMarket Pro{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Notifications Center</h1>
+                <p class="text-gray-600 dark:text-gray-400">Manage system alerts and notifications</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="px-3 py-1 bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 rounded-full text-sm font-medium">
+                    {{ unread_count }} Unread
+                </span>
+                <a href="{% url 'analytics_dashboard' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="space-y-4">
+        {% for notification in notifications %}
+        <div class="bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-gray-200 dark:border-dark-700 {% if not notification.is_read %}ring-2 ring-blue-500/20{% endif %}">
+            <div class="p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start space-x-4 flex-1">
+                        <!-- Icon -->
+                        <div class="flex-shrink-0 mt-1">
+                            {% if notification.notification_type == 'ALERT' %}
+                                <div class="bg-red-100 dark:bg-red-500/20 p-2 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                                </div>
+                            {% elif notification.notification_type == 'WARNING' %}
+                                <div class="bg-yellow-100 dark:bg-yellow-500/20 p-2 rounded-lg">
+                                    <i class="fas fa-exclamation-circle text-yellow-600 dark:text-yellow-400"></i>
+                                </div>
+                            {% elif notification.notification_type == 'SUCCESS' %}
+                                <div class="bg-green-100 dark:bg-green-500/20 p-2 rounded-lg">
+                                    <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                                </div>
+                            {% else %}
+                                <div class="bg-blue-100 dark:bg-blue-500/20 p-2 rounded-lg">
+                                    <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <h3 class="font-semibold text-gray-900 dark:text-white">{{ notification.title }}</h3>
+                                {% if not notification.is_read %}
+                                    <span class="px-2 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-400 rounded text-xs font-medium">
+                                        New
+                                    </span>
+                                {% endif %}
+                                <span class="px-2 py-1 bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400 rounded text-xs">
+                                    {{ notification.notification_type }}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-3">{{ notification.message }}</p>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-gray-500 dark:text-gray-500">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ notification.created_at|timesince }} ago
+                                </p>
+                                {% if not notification.is_read %}
+                                <form method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                                    <button type="submit" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                        Mark as Read
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white dark:bg-dark-800 rounded-xl shadow-lg p-12 text-center border border-gray-200 dark:border-dark-700">
+            <div class="bg-gray-100 dark:bg-gray-500/20 p-4 rounded-full inline-block mb-4">
+                <i class="fas fa-bell-slash text-gray-400 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Notifications</h3>
+            <p class="text-gray-600 dark:text-gray-400">You're all caught up! No new notifications at this time.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination if needed -->
+    {% if notifications.has_other_pages %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex space-x-2">
+            {% if notifications.has_previous %}
+                <a href="?page={{ notifications.previous_page_number }}" class="px-3 py-2 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-700">
+                    Previous
+                </a>
+            {% endif %}
+            
+            <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}
+            </span>
+            
+            {% if notifications.has_next %}
+                <a href="?page={{ notifications.next_page_number }}" class="px-3 py-2 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-700">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

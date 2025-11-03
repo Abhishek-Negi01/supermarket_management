@@ -120,13 +120,19 @@ Management{% endblock %} {% block content %}
             for="{{ form.purchase_price.id_for_label }}"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
-            Purchase Price ($) *
+            Purchase Price per Unit (₹) *
+          </label>
+          <div class="text-xs text-gray-500 mb-1">Enter cost price for one unit from supplier</div>
+          <label
+            for="{{ form.purchase_price.id_for_label }}"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
           </label>
           <div class="relative">
             <div
               class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
             >
-              <i class="fas fa-dollar-sign text-gray-500"></i>
+              <span class="text-gray-500">₹</span>
             </div>
             {{ form.purchase_price }}
           </div>

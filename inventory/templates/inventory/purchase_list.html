@@ -62,13 +62,13 @@ Management{% endblock %} {% block content %}
         <p
           class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-300 transition-colors"
         >
-          ${{ total_value|default:"0" }}
+          ₹{{ total_value|default:"0" }}
         </p>
       </div>
       <div
         class="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl group-hover:scale-110 transition-transform"
       >
-        <i class="fas fa-dollar-sign text-white text-xl"></i>
+        <span class="text-white text-xl font-bold">₹</span>
       </div>
     </div>
   </div>
@@ -85,7 +85,7 @@ Management{% endblock %} {% block content %}
         <p
           class="text-3xl font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-500 dark:group-hover:text-blue-300 transition-colors"
         >
-          ${{ average_purchase|default:"0" }}
+          ₹{{ average_purchase|default:"0" }}
         </p>
       </div>
       <div
@@ -268,7 +268,7 @@ Management{% endblock %} {% block content %}
           <td
             class="px-6 py-5 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white"
           >
-            ${{ purchase.purchase_price }}
+            ₹{{ purchase.purchase_price }}
           </td>
           <td class="px-6 py-5 whitespace-nowrap">
             <div class="text-sm text-gray-900 dark:text-white">
