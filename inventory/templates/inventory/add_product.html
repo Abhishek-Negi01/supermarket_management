@@ -56,6 +56,30 @@ Management{% endblock %} {% block content %}
         {% endif %}
       </div>
 
+      <!-- Category -->
+      <div>
+        <label
+          for="{{ form.category.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-2"
+        >
+          Category
+        </label>
+        <div class="relative">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-folder text-gray-500"></i>
+          </div>
+          {{ form.category }}
+        </div>
+        {% if form.category.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ form.category.errors.0 }}</p>
+        {% endif %}
+        <p class="mt-1 text-sm text-gray-400">
+          Select a category or <a href="{% url 'add_category' %}" class="text-primary-400 hover:text-primary-300" target="_blank">create new category</a>
+        </p>
+      </div>
+
       <!-- Description -->
       <div>
         <label
@@ -203,6 +227,7 @@ Management{% endblock %} {% block content %}
 <!-- Custom Styles -->
 <style>
   #id_name,
+  #id_category,
   #id_price,
   #id_quantity_in_stock,
   #id_expiry_date {
@@ -219,6 +244,7 @@ Management{% endblock %} {% block content %}
   }
 
   #id_name:focus,
+  #id_category:focus,
   #id_price:focus,
   #id_quantity_in_stock:focus,
   #id_expiry_date:focus {

@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from . import views_csv
+from . import views_billing
 
 urlpatterns = [
     # Main pages
@@ -74,4 +76,19 @@ urlpatterns = [
     
     # Bulk import
     path('bulk-import/', views.bulk_import_products, name='bulk_import_products'),
+    
+    # CSV Import/Export
+    path('csv-import/', views_csv.csv_import_page, name='csv_import'),
+    path('csv-export/<str:export_type>/', views_csv.csv_export, name='csv_export'),
+    path('csv-template/<str:template_type>/', views_csv.download_template, name='download_template'),
+    
+    # Billing System
+    path('billing/', views_billing.billing_page, name='billing_page'),
+    path('bills/', views_billing.bills_list, name='bills_list'),
+    path('bill/<int:bill_id>/print/', views_billing.print_bill, name='print_bill'),
+    path('bill/<int:bill_id>/pdf/', views_billing.download_bill_pdf, name='download_bill_pdf'),
+    path('api/add-to-bill/', views_billing.add_to_current_bill, name='add_to_bill'),
+    path('api/get-bill/', views_billing.get_current_bill, name='get_current_bill'),
+    path('api/complete-bill/', views_billing.complete_bill, name='complete_bill'),
+    path('api/remove-from-bill/', views_billing.remove_from_bill, name='remove_from_bill'),
 ]

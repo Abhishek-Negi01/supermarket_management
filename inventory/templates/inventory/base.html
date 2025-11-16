@@ -61,6 +61,49 @@
       };
     </script>
     <style>
+      /* Smooth scroll */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(to bottom, #10b981, #3b82f6);
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(to bottom, #059669, #2563eb);
+      }
+      
+      /* Glow effect on hover */
+      .glow-on-hover:hover {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+      }
+      
+      /* Pulse animation */
+      @keyframes pulse-glow {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      
+      .animate-pulse-glow {
+        animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      
       /* Custom date input styling */
       input[type="date"] {
         position: relative;
@@ -107,23 +150,24 @@
     </style>
   </head>
   <body
-    class="dark bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 min-h-screen transition-all duration-300"
+    class="dark bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 min-h-screen transition-all duration-300"
   >
     <!-- Navigation -->
     <nav
       id="main-nav"
-      class="bg-dark-800/95 backdrop-blur-sm shadow-2xl border-b border-dark-700 sticky top-0 z-50 dark:bg-dark-800/95 dark:border-dark-700 bg-white/95 border-gray-200"
+      class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 backdrop-blur-sm shadow-2xl border-b border-slate-700/50 sticky top-0 z-50"
     >
       <div class="container mx-auto px-4">
         <div class="flex justify-between items-center py-4">
           <!-- Logo/Brand -->
           <div class="flex items-center space-x-3">
             <div class="relative">
-              <i class="fas fa-store text-3xl text-primary-400"></i>
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full blur-lg opacity-50"></div>
+              <i class="fas fa-store text-3xl text-emerald-400 relative"></i>
             </div>
             <a
               href="{% url 'home' %}"
-              class="text-xl font-bold bg-gradient-to-r from-primary-400 to-primary-300 bg-clip-text text-transparent hover:from-primary-300 hover:to-primary-200 transition-all duration-300"
+              class="text-xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent hover:from-emerald-300 hover:via-blue-300 hover:to-purple-300 transition-all duration-300"
             >
               SuperMarket Pro
             </a>
@@ -176,6 +220,12 @@
                   <i class="fas fa-upload mr-2"></i>Bulk Import
                 </a>
                 <a
+                  href="{% url 'csv_import' %}"
+                  class="block px-4 py-3 text-gray-300 hover:bg-emerald-600 hover:text-white"
+                >
+                  <i class="fas fa-file-csv mr-2"></i>CSV Import/Export
+                </a>
+                <a
                   href="{% url 'stock_adjustment_list' %}"
                   class="block px-4 py-3 text-gray-300 hover:bg-emerald-600 hover:text-white rounded-b-xl"
                 >
@@ -197,22 +247,28 @@
                 class="absolute top-full left-0 mt-2 w-48 bg-dark-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
               >
                 <a
-                  href="{% url 'purchase_list' %}"
+                  href="{% url 'billing_page' %}"
                   class="block px-4 py-3 text-gray-300 hover:bg-purple-600 hover:text-white rounded-t-xl"
+                >
+                  <i class="fas fa-cash-register mr-2"></i>Billing
+                </a>
+                <a
+                  href="{% url 'bills_list' %}"
+                  class="block px-4 py-3 text-gray-300 hover:bg-purple-600 hover:text-white"
+                >
+                  <i class="fas fa-file-invoice mr-2"></i>Bills
+                </a>
+                <a
+                  href="{% url 'purchase_list' %}"
+                  class="block px-4 py-3 text-gray-300 hover:bg-purple-600 hover:text-white"
                 >
                   <i class="fas fa-shopping-cart mr-2"></i>Purchases
                 </a>
                 <a
                   href="{% url 'supplier_list' %}"
-                  class="block px-4 py-3 text-gray-300 hover:bg-purple-600 hover:text-white"
-                >
-                  <i class="fas fa-truck mr-2"></i>Suppliers
-                </a>
-                <a
-                  href="{% url 'order_list' %}"
                   class="block px-4 py-3 text-gray-300 hover:bg-purple-600 hover:text-white rounded-b-xl"
                 >
-                  <i class="fas fa-receipt mr-2"></i>Orders
+                  <i class="fas fa-truck mr-2"></i>Suppliers
                 </a>
               </div>
             </div>
@@ -366,21 +422,13 @@
 
           <!-- Right Side -->
           <div class="flex items-center space-x-3">
-            <!-- Cart -->
-            <a
-              href="{% url 'cart_summary' %}"
-              class="p-2 rounded-xl bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white transition-all"
-            >
-              <i class="fas fa-shopping-cart"></i>
+            <!-- Notifications Badge -->
+            <a href="{% url 'notifications_center' %}" class="relative p-2 rounded-xl bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white transition-all">
+              <i class="fas fa-bell"></i>
+              {% if unread_notifications_count > 0 %}
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{{ unread_notifications_count }}</span>
+              {% endif %}
             </a>
-
-            <!-- Theme Toggle -->
-            <button
-              id="theme-toggle"
-              class="p-2 rounded-xl bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white transition-all"
-            >
-              <i class="fas fa-moon"></i>
-            </button>
 
             <!-- User Menu -->
             {% if user.is_authenticated %}
@@ -485,23 +533,53 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark-800/50 border-t border-dark-700 mt-auto">
-      <div class="container mx-auto px-4 py-6 text-center">
-        <p class="text-gray-400">
-          &copy; 2025 SuperMarket Pro - Created by AARD Technologies. All rights reserved.
-        </p>
+    <footer class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-t border-slate-700/30 mt-auto overflow-hidden">
+      <!-- Decorative elements -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-0 left-1/4 w-64 h-64 bg-emerald-500 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-500 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div class="container mx-auto px-4 py-8 relative z-10">
+        <div class="text-center space-y-4">
+          <!-- Logo/Brand -->
+          <div class="flex items-center justify-center space-x-3 mb-2">
+            <div class="relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full blur-md opacity-50"></div>
+              <i class="fas fa-store text-2xl text-emerald-400 relative"></i>
+            </div>
+            <span class="text-xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              SuperMarket Pro
+            </span>
+          </div>
+          
+          <!-- Tagline -->
+          <p class="text-gray-400 text-sm font-light tracking-wide">
+            Modern Inventory Management System
+          </p>
+          
+          <!-- Divider -->
+          <div class="flex items-center justify-center space-x-2 py-2">
+            <div class="h-px w-16 bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-slate-600"></div>
+            <div class="h-px w-16 bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
+          </div>
+          
+          <!-- Copyright -->
+          <p class="text-gray-500 text-xs font-light">
+            &copy; 2025 Created by <span class="text-emerald-400 font-medium">AARD Technologies</span>. All rights reserved.
+          </p>
+          
+          <!-- Version -->
+          <p class="text-gray-600 text-xs">
+            Version 2.0 • Production Ready
+          </p>
+        </div>
       </div>
     </footer>
 
     <!-- JavaScript -->
     <script>
-      // Theme toggle
-      document
-        .getElementById("theme-toggle")
-        .addEventListener("click", function () {
-          document.documentElement.classList.toggle("dark");
-        });
-
       // Mobile menu toggle
       document
         .getElementById("mobile-menu-btn")

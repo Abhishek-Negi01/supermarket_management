@@ -199,42 +199,53 @@ Chart.defaults.borderColor = '#374151';
 const salesCtx = document.getElementById('salesTrendsChart').getContext('2d');
 const salesData = {{ sales_trends|safe }};
 
-new Chart(salesCtx, {
-    type: 'line',
-    data: {
-        labels: salesData.map(item => new Date(item.day).toLocaleDateString()),
-        datasets: [{
-            label: 'Daily Sales',
-            data: salesData.map(item => item.total_scans || 0),
-            borderColor: '#60A5FA',
-            backgroundColor: 'rgba(96, 165, 250, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
+console.log('Sales data:', salesData);
+
+if (salesData && salesData.length > 0) {
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: salesData.map(item => new Date(item.day).toLocaleDateString()),
+            datasets: [{
+                label: 'Daily Sales',
+                data: salesData.map(item => item.total_scans || 0),
+                borderColor: '#60A5FA',
+                backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: '#374151'
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
                 }
             },
-            x: {
-                grid: {
-                    color: '#374151'
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#374151'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: '#374151'
+                    }
                 }
             }
         }
-    }
-});
+    });
+} else {
+    salesCtx.font = '16px sans-serif';
+    salesCtx.fillStyle = '#9CA3AF';
+    salesCtx.textAlign = 'center';
+    salesCtx.fillText('No sales data available', salesCtx.canvas.width / 2, salesCtx.canvas.height / 2);
+}
 
 // Product Velocity Chart
 const velocityCtx = document.getElementById('velocityChart').getContext('2d');

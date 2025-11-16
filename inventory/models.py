@@ -4,12 +4,12 @@ import qrcode
 from io import BytesIO
 from django.core.files import File
 from django.utils import timezone
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 import os
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -20,7 +20,7 @@ class Category(models.Model):
         return self.name
 
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity_in_stock = models.PositiveIntegerField()
@@ -85,12 +85,17 @@ class Product(models.Model):
             print(f"QR Code generation failed: {e}")
 
 class Supplier(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     contact_person = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
+    email = models.EmailField(blank=True, unique=True)
     address = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['name'], name='unique_supplier_name')
+        ]
 
     def __str__(self):
         return self.name
@@ -220,6 +225,9 @@ class InventoryAlert(models.Model):
     last_triggered = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        unique_together = ['product', 'alert_type']
+    
     def __str__(self):
         return f'{self.product.name} - {self.alert_type}'
 
@@ -298,3 +306,60 @@ def delete_qr_file(sender, instance, **kwargs):
                 os.remove(instance.qr_code.path)
         except:
             pass
+
+# Bill Models for Receipt Generation
+class Bill(models.Model):
+    bill_number = models.CharField(max_length=20, unique=True)
+    cashier = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bills_created')
+    customer_name = models.CharField(max_length=100, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=[('CASH', 'Cash'), ('CARD', 'Card'), ('UPI', 'UPI')], default='CASH')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f'Bill #{self.bill_number}'
+    
+    def save(self, *args, **kwargs):
+        if not self.bill_number:
+            # Generate bill number: BILL-YYYYMMDD-XXXX
+            from datetime import datetime
+            today = datetime.now().strftime('%Y%m%d')
+            last_bill = Bill.objects.filter(bill_number__startswith=f'BILL-{today}').order_by('-bill_number').first()
+            if last_bill:
+                last_num = int(last_bill.bill_number.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+            self.bill_number = f'BILL-{today}-{new_num:04d}'
+        super().save(*args, **kwargs)
+
+class BillItem(models.Model):
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f'{self.product.name} x {self.quantity}'
+    
+    def save(self, *args, **kwargs):
+        self.total_price = self.quantity * self.unit_price
+        super().save(*args, **kwargs)
+
+# Signal to auto-update analytics after scan
+@receiver(post_save, sender=ScanEvent)
+def update_analytics_on_scan(sender, instance, created, **kwargs):
+    """Auto-update analytics when product is scanned for billing"""
+    if created and instance.scan_type == 'BILL':
+        try:
+            from .analytics import InventoryAnalytics
+            InventoryAnalytics.update_daily_analytics()
+            InventoryAnalytics.check_inventory_alerts()
+        except Exception as e:
+            print(f"Analytics update failed: {e}")
+            import traceback
+            traceback.print_exc()

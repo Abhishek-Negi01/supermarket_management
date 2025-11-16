@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>SUPERMARKET PRO</h1>
+    <p>Bill No: {{ bill.bill_number }}</p>
+    <p>Date: {{ bill.created_at|date:"d M Y, h:i A" }}</p>
+    <p>Cashier: {{ bill.cashier.username }}</p>
+  </div>
+  
+  <table>
+    <tr>
+      <th>Item</th>
+      <th>Qty</th>
+      <th>Price</th>
+      <th>Total</th>
+    </tr>
+    {% for item in bill.items.all %}
+    <tr>
+      <td>{{ item.product.name }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>₹{{ item.unit_price }}</td>
+      <td>₹{{ item.total_price }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  
+  <div class="total">
+    Total: ₹{{ bill.total_amount }}<br>
+    Payment: {{ bill.payment_method }}
+  </div>
+  
+  <p style="text-align: center; margin-top: 40px;">Thank you for shopping with us!</p>
+</body>
+</html>

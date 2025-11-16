@@ -9,12 +9,13 @@ class InventoryAnalytics:
     @staticmethod
     def calculate_product_velocity(product, days=30):
         """Calculate product velocity (scans per day)"""
-        end_date = timezone.now().date()
-        start_date = end_date - timedelta(days=days)
+        end_datetime = timezone.now()
+        start_datetime = end_datetime - timedelta(days=days)
         
         scan_count = ScanEvent.objects.filter(
             product=product,
-            timestamp__date__range=[start_date, end_date],
+            timestamp__gte=start_datetime,
+            timestamp__lte=end_datetime,
             scan_type='BILL'
         ).aggregate(total=Sum('quantity'))['total'] or 0
         
@@ -27,15 +28,13 @@ class InventoryAnalytics:
         product_velocities = []
         
         for product in products:
-            velocity = InventoryAnalytics.calculate_product_velocity(product)
+            velocity = InventoryAnalytics.calculate_product_velocity(product, 7)
             if velocity > 0:
                 product_velocities.append({
                     'product': product,
                     'velocity': velocity,
                     'current_stock': product.quantity_in_stock
                 })
-        
-
         
         return sorted(product_velocities, key=lambda x: x['velocity'], reverse=True)[:limit]
     
@@ -119,8 +118,8 @@ class InventoryAnalytics:
                     alerts_created += 1
             
             # Fast moving product alert
-            velocity = InventoryAnalytics.calculate_product_velocity(product)
-            if velocity > 5:  # More than 5 units per day
+            velocity = InventoryAnalytics.calculate_product_velocity(product, 7)
+            if velocity > 1:  # More than 1 unit per day
                 alert, created = InventoryAlert.objects.get_or_create(
                     product=product,
                     alert_type='FAST_MOVING',
@@ -149,11 +148,12 @@ class InventoryAnalytics:
     @staticmethod
     def get_sales_trends(days=30):
         """Get sales trends for the last N days"""
-        end_date = timezone.now().date()
-        start_date = end_date - timedelta(days=days)
+        end_datetime = timezone.now()
+        start_datetime = end_datetime - timedelta(days=days)
         
         daily_sales = ScanEvent.objects.filter(
-            timestamp__date__range=[start_date, end_date],
+            timestamp__gte=start_datetime,
+            timestamp__lte=end_datetime,
             scan_type='BILL'
         ).extra(
             select={'day': 'DATE(timestamp)'}

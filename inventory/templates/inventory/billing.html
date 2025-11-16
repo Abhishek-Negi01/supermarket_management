@@ -1,0 +1,175 @@
+{% extends 'inventory/base.html' %}
+{% block title %}Billing - SuperMarket Pro{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-white">
+      <i class="fas fa-cash-register text-purple-400 mr-3"></i>Billing
+    </h1>
+    <a
+      href="{% url 'scan_qr_code_page' %}"
+      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all"
+    >
+      <i class="fas fa-qrcode mr-2"></i>Scan QR
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Products List -->
+    <div class="bg-dark-800/50 rounded-2xl p-6 border border-dark-700">
+      <h2 class="text-xl font-semibold text-white mb-4">Products</h2>
+      <input
+        type="text"
+        id="searchProduct"
+        placeholder="Search products..."
+        class="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white mb-4"
+      />
+      <div class="space-y-2 max-h-96 overflow-y-auto">
+        {% for product in products %}
+        <div
+          class="p-3 bg-dark-700 rounded-xl flex justify-between items-center"
+        >
+          <div>
+            <p class="text-white font-medium">{{ product.name }}</p>
+            <p class="text-gray-400 text-sm">
+              ₹{{ product.price }} | Stock: {{ product.quantity_in_stock }}
+            </p>
+          </div>
+          <button
+            onclick="addToBill({{ product.id }}, '{{ product.name }}', {{ product.price }})"
+            class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm"
+          >
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Current Bill -->
+    <div class="bg-dark-800/50 rounded-2xl p-6 border border-dark-700">
+      <h2 class="text-xl font-semibold text-white mb-4">Current Bill</h2>
+      <div id="billItems" class="space-y-2 mb-4 max-h-64 overflow-y-auto"></div>
+      <div class="border-t border-dark-600 pt-4">
+        <div class="flex justify-between text-xl font-bold text-white mb-4">
+          <span>Total:</span>
+          <span id="totalAmount">₹0.00</span>
+        </div>
+        <div class="space-y-2">
+          <select
+            id="paymentMethod"
+            class="w-full px-4 py-2 bg-dark-700 border border-dark-600 rounded-xl text-white"
+          >
+            <option value="CASH">Cash</option>
+            <option value="CARD">Card</option>
+            <option value="UPI">UPI</option>
+          </select>
+          <button
+            onclick="completeBill()"
+            class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold"
+          >
+            <i class="fas fa-check mr-2"></i>Complete Bill
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentBill = {};
+
+  function addToBill(productId, productName, price) {
+    fetch("/api/add-to-bill/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `product_id=${productId}&quantity=1&csrfmiddlewaretoken={{ csrf_token }}`,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          loadBill();
+        } else {
+          alert(data.error);
+        }
+      });
+  }
+
+  function loadBill() {
+    fetch("/api/get-bill/")
+      .then((r) => r.json())
+      .then((data) => {
+        const billItems = document.getElementById("billItems");
+        billItems.innerHTML = "";
+        let total = 0;
+
+        data.items.forEach((item) => {
+          total += item.total;
+          billItems.innerHTML += `
+        <div class="p-3 bg-dark-700 rounded-xl flex justify-between items-center">
+          <div>
+            <p class="text-white">${item.name} x ${item.quantity}</p>
+            <p class="text-gray-400 text-sm">₹${item.price} each</p>
+          </div>
+          <div class="text-right">
+            <p class="text-white font-semibold">₹${item.total.toFixed(2)}</p>
+            <button onclick="removeFromBill(${
+              item.product_id
+            })" class="text-red-400 text-sm">Remove</button>
+          </div>
+        </div>
+      `;
+        });
+
+        document.getElementById("totalAmount").textContent = `₹${total.toFixed(
+          2
+        )}`;
+      });
+  }
+
+  function removeFromBill(productId) {
+    fetch("/api/remove-from-bill/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `product_id=${productId}&csrfmiddlewaretoken={{ csrf_token }}`,
+    })
+      .then((r) => r.json())
+      .then(() => loadBill());
+  }
+
+  function completeBill() {
+    const paymentMethod = document.getElementById("paymentMethod").value;
+    fetch("/api/complete-bill/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `payment_method=${paymentMethod}&csrfmiddlewaretoken={{ csrf_token }}`,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          alert(`Bill completed! Bill Number: ${data.bill_number}`);
+          window.open(`/bill/${data.bill_id}/print/`, "_blank");
+          loadBill();
+        } else {
+          alert(data.error);
+        }
+      });
+  }
+
+  // Search products
+  document
+    .getElementById("searchProduct")
+    .addEventListener("input", function () {
+      const search = this.value.toLowerCase();
+      document.querySelectorAll(".space-y-2 > div").forEach((div) => {
+        const text = div.textContent.toLowerCase();
+        div.style.display = text.includes(search) ? "" : "none";
+      });
+    });
+
+  loadBill();
+
+  // Auto-refresh bill every 2 seconds to catch QR scans
+  setInterval(loadBill, 2000);
+</script>
+{% endblock %}

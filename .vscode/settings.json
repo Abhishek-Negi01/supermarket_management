@@ -1,6 +1,6 @@
 {
   "editor.fontSize": 16,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "workbench.colorTheme": "GitHub Dark",
   "editor.mouseWheelZoom": true,
   "editor.formatOnPaste": true,

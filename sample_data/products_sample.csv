@@ -1,0 +1,7 @@
+name,description,price,quantity_in_stock,category_name,expiry_date
+Laptop,Dell Laptop 15 inch,45000.00,10,Electronics,2025-12-31
+Mouse,Wireless Mouse,500.00,50,Electronics,
+Rice,Basmati Rice 1kg,150.00,500,Groceries,2024-06-30
+Coca Cola,Soft drink 500ml,40.00,200,Beverages,2024-12-31
+Milk,Fresh Milk 1L,60.00,100,Dairy,2024-02-15
+Chips,Potato Chips 100g,20.00,300,Snacks,2024-08-30

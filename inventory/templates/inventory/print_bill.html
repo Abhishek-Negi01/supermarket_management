@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bill {{ bill.bill_number }}</title>
+  <style>
+    body { font-family: monospace; max-width: 400px; margin: 20px auto; }
+    .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+    .item { display: flex; justify-between; margin: 5px 0; }
+    .total { border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; font-weight: bold; font-size: 18px; }
+    @media print { button { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>SUPERMARKET PRO</h2>
+    <p>Bill No: {{ bill.bill_number }}</p>
+    <p>Date: {{ bill.created_at|date:"d M Y, h:i A" }}</p>
+    <p>Cashier: {{ bill.cashier.username }}</p>
+    {% if bill.customer_name %}<p>Customer: {{ bill.customer_name }}</p>{% endif %}
+  </div>
+  
+  <div>
+    {% for item in bill.items.all %}
+    <div class="item">
+      <span>{{ item.product.name }} x{{ item.quantity }}</span>
+      <span>₹{{ item.total_price }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  
+  <div class="total">
+    <div class="item">
+      <span>TOTAL:</span>
+      <span>₹{{ bill.total_amount }}</span>
+    </div>
+    <div class="item" style="font-size: 14px; font-weight: normal;">
+      <span>Payment:</span>
+      <span>{{ bill.payment_method }}</span>
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-top: 20px; border-top: 2px dashed #000; padding-top: 10px;">
+    <p>Thank you for shopping with us!</p>
+  </div>
+  
+  <button onclick="window.print()" style="width: 100%; padding: 10px; margin-top: 20px; background: #4CAF50; color: white; border: none; cursor: pointer;">
+    Print Bill
+  </button>
+</body>
+</html>

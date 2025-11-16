@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Product, Purchase, StockAdjustment, ScanEvent, Order, OrderItem, Category, Supplier, Employee, ProductAnalytics, InventoryAlert, SystemNotification
 from .forms import ProductForm, PurchaseForm, StockAdjustmentForm
 from .cart_utils import get_cart, clear_cart
+from .permissions import admin_required, manager_required, cashier_required, stock_keeper_required
 
 def staff_required(view_func):
     decorated_view_func = login_required(user_passes_test(lambda u: u.is_staff)(view_func))
@@ -19,10 +20,11 @@ def staff_required(view_func):
 
 
 def product_list(request):
-    products = Product.objects.all()
-    return render(request, 'inventory/product_list.html', {'products': products})
+    products = Product.objects.select_related('category').all()
+    categories = Category.objects.all()
+    return render(request, 'inventory/product_list.html', {'products': products, 'categories': categories})
 
-@staff_required
+@stock_keeper_required
 def add_product(request):
     if request.method ==  'POST':
         form = ProductForm(request.POST)
@@ -35,7 +37,7 @@ def add_product(request):
     
     return render(request,'inventory/add_product.html',{'form':form})
 
-@staff_required
+@stock_keeper_required
 def add_purchase(request):
     if request.method == 'POST':
         form = PurchaseForm(request.POST)
@@ -76,7 +78,7 @@ def purchase_list(request):
     return render(request, 'inventory/purchase_list.html', context)
 
 
-@staff_required
+@stock_keeper_required
 def add_stock_adjustment(request):
     if request.method == 'POST':
         form = StockAdjustmentForm(request.POST)
@@ -161,33 +163,44 @@ def api_scan_product(request):
         try:
             product = Product.objects.get(id=product_id)
             
-            # Check stock availability for billing
-            if scan_type == 'BILL' and product.quantity_in_stock < quantity:
+            # Check stock availability
+            if product.quantity_in_stock < quantity:
                 return JsonResponse({
                     'success': False, 
                     'error': f'Insufficient stock. Available: {product.quantity_in_stock}'
                 })
             
-            # Log scan event
-            scan_event = ScanEvent.objects.create(
+            # Add to current bill session for billing scans
+            if scan_type == 'BILL' and request.user.is_authenticated:
+                current_bill = request.session.get('current_bill', {})
+                
+                if str(product_id) in current_bill:
+                    current_bill[str(product_id)]['quantity'] += quantity
+                else:
+                    current_bill[str(product_id)] = {
+                        'name': product.name,
+                        'price': float(product.price),
+                        'quantity': quantity
+                    }
+                
+                request.session['current_bill'] = current_bill
+                request.session.modified = True
+            
+            # Log scan event (don't update stock here - will be done on bill completion)
+            ScanEvent.objects.create(
                 product=product,
                 scan_type=scan_type,
                 quantity=quantity,
                 remarks=f'Scanned for {scan_type.lower()}',
                 user=request.user if request.user.is_authenticated else None
             )
-            
-            # Automatic stock update for billing
-            if scan_type == 'BILL':
-                product.quantity_in_stock -= quantity
-                product.save()
                 
             return JsonResponse({
                 'success': True, 
                 'product_name': product.name,
                 'price': float(product.price),
                 'remaining_stock': product.quantity_in_stock,
-                'scan_id': scan_event.id
+                'in_bill': scan_type == 'BILL'
             })
             
         except Product.DoesNotExist:
@@ -268,7 +281,7 @@ def scan_event_list(request):
     return render(request, 'inventory/scan_event_list.html', {'events': events})
 
 # Missing view functions for new URLs
-@staff_required
+@stock_keeper_required
 def edit_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -281,7 +294,7 @@ def edit_product(request, pk):
         form = ProductForm(instance=product)
     return render(request, 'inventory/add_product.html', {'form': form, 'product': product})
 
-@staff_required
+@stock_keeper_required
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -295,7 +308,7 @@ def category_list(request):
     categories = Category.objects.all()
     return render(request, 'inventory/category_list.html', {'categories': categories})
 
-@staff_required
+@stock_keeper_required
 def add_category(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -309,7 +322,7 @@ def supplier_list(request):
     suppliers = Supplier.objects.all()
     return render(request, 'inventory/supplier_list.html', {'suppliers': suppliers})
 
-@staff_required
+@stock_keeper_required
 def add_supplier(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -333,7 +346,7 @@ def qr_dashboard(request):
         'scan_stats': scan_stats
     })
 
-@staff_required
+@stock_keeper_required
 def generate_qr_labels(request):
     if request.method == 'POST':
         product_ids = request.POST.getlist('products')
@@ -394,11 +407,11 @@ def order_list(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at') if request.user.is_authenticated else []
     return render(request, 'inventory/order_list.html', {'orders': orders})
 
-@staff_required
+@manager_required
 def reports_dashboard(request):
     return render(request, 'inventory/reports_dashboard.html')
 
-@staff_required
+@manager_required
 def stock_report(request):
     from django.db.models import Sum, F
     
@@ -416,7 +429,7 @@ def stock_report(request):
         'total_value': total_value
     })
 
-@staff_required
+@manager_required
 def sales_report(request):
     # Get sales from both completed orders and QR scan events
     orders = Order.objects.filter(status='COMPLETED').order_by('-created_at')[:50]
@@ -441,14 +454,14 @@ def sales_report(request):
     }
     return render(request, 'inventory/sales_report.html', context)
 
-@staff_required
+@manager_required
 def low_stock_report(request):
     low_stock_products = Product.objects.filter(quantity_in_stock__lt=10)
     return render(request, 'inventory/low_stock_report.html', {
         'products': low_stock_products
     })
 
-@staff_required
+@admin_required
 def admin_dashboard(request):
     from django.contrib.auth.models import User
     stats = {
@@ -459,13 +472,13 @@ def admin_dashboard(request):
     }
     return render(request, 'inventory/admin_dashboard.html', stats)
 
-@staff_required
+@admin_required
 def user_management(request):
     from django.contrib.auth.models import User
     users = User.objects.all()
     return render(request, 'inventory/user_management.html', {'users': users})
 
-@staff_required
+@admin_required
 def system_settings(request):
     from .models import SystemSettings
     settings = SystemSettings.get_settings()
@@ -510,10 +523,11 @@ def api_testing(request):
     return render(request, 'inventory/api_testing.html', {'products': products})
 
 # Phase 3: Analytics Views
-@staff_required
+@manager_required
 def analytics_dashboard(request):
     """Main analytics dashboard"""
     from .analytics import InventoryAnalytics
+    import json
     
     # Get key metrics
     fast_moving = InventoryAnalytics.get_fast_moving_products(5)
@@ -523,17 +537,27 @@ def analytics_dashboard(request):
     # Get recent notifications
     notifications = SystemNotification.objects.filter(is_read=False)[:5]
     
+    # Convert sales trends to JSON for charts (convert dates to strings)
+    sales_trends_data = []
+    for trend in sales_trends:
+        sales_trends_data.append({
+            'day': str(trend['day']),
+            'total_scans': trend['total_scans'],
+            'total_revenue': float(trend['total_revenue']) if trend['total_revenue'] else 0
+        })
+    sales_trends_json = json.dumps(sales_trends_data)
+    
     context = {
         'fast_moving_products': fast_moving,
         'low_stock_products': low_stock,
-        'sales_trends': sales_trends,
+        'sales_trends': sales_trends_json,
         'notifications': notifications,
         'total_products': Product.objects.count(),
         'total_alerts': InventoryAlert.objects.filter(is_active=True).count(),
     }
     return render(request, 'inventory/analytics_dashboard.html', context)
 
-@staff_required
+@manager_required
 def product_analytics(request, pk):
     """Individual product analytics"""
     from .analytics import InventoryAnalytics
@@ -557,7 +581,7 @@ def product_analytics(request, pk):
     }
     return render(request, 'inventory/product_analytics.html', context)
 
-@staff_required
+@manager_required
 def notifications_center(request):
     """Notifications management center"""
     notifications = SystemNotification.objects.all().order_by('-created_at')
@@ -666,7 +690,7 @@ def trigger_alert_check(request):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-@staff_required
+@manager_required
 def alert_management(request):
     """Alert management dashboard"""
     active_alerts = InventoryAlert.objects.filter(is_active=True).select_related('product')
@@ -683,7 +707,7 @@ def alert_management(request):
     }
     return render(request, 'inventory/alert_management.html', context)
 
-@staff_required
+@stock_keeper_required
 def bulk_import_products(request):
     import_results = None
     
@@ -716,12 +740,12 @@ def bulk_import_products(request):
     
     return render(request, 'inventory/bulk_import.html', {'import_results': import_results})
 
-@staff_required
+@manager_required
 def export_stock_csv(request):
     from .exports import ReportExporter
     return ReportExporter.export_stock_report_csv()
 
-@staff_required
+@manager_required
 def export_analytics_pdf(request):
     from .exports import ReportExporter
     response = ReportExporter.export_analytics_pdf()
