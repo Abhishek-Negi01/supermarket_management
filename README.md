@@ -363,14 +363,4 @@ Time: 40 seconds for 10 items
 - **PDF**: xhtml2pdf
 - **Authentication**: Django built-in auth
 
-## 📞 Support
-
-For issues or questions, contact system administrator.
-
-## 📄 License
-
-MIT License
-
----
-
 **Status**: ✅ Production Ready | **Version**: 1.0 | **Last Updated**: November 2025
